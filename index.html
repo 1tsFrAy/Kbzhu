@@ -1,459 +1,175 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MassGain 193 — Калькулятор без весов</title>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --card-light: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #10b981;
-      --accent-hover: #059669;
-      --protein: #3b82f6;
-      --fat: #f59e0b;
-      --carbs: #10b981;
-      --danger: #ef4444;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 90px; max-width: 500px; margin: 0 auto; }
-    header { padding: 16px 20px; background: var(--card); border-bottom: 1px solid var(--card-light); position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { font-size: 18px; font-weight: 700; }
-    header span { font-size: 12px; background: var(--accent); color: #000; font-weight: 700; padding: 4px 8px; border-radius: 99px; }
-
-    .container { padding: 16px; }
-    .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
-    .card-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-
-    /* Progress Section */
-    .kcal-main { text-align: center; margin-bottom: 14px; }
-    .kcal-numbers { font-size: 32px; font-weight: 800; color: var(--accent); }
-    .kcal-numbers small { font-size: 16px; color: var(--muted); font-weight: 500; }
-    .progress-bar { width: 100%; height: 12px; background: var(--bg); border-radius: 99px; overflow: hidden; margin-top: 8px; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); width: 0%; transition: width 0.3s ease; }
-
-    .macros-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
-    .macro-box { background: var(--bg); padding: 10px; border-radius: 12px; text-align: center; }
-    .macro-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-    .macro-val { font-size: 15px; font-weight: 700; }
-    .mini-bar { height: 5px; background: var(--card-light); border-radius: 99px; overflow: hidden; margin-top: 6px; }
-    .mini-fill { height: 100%; width: 0%; transition: width 0.3s ease; }
-
-    /* Quick Filter & Chips */
-    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
-    .chips::-webkit-scrollbar { display: none; }
-    .chip { background: var(--bg); color: var(--muted); border: 1px solid var(--card-light); padding: 8px 14px; border-radius: 99px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
-    .chip.active { background: var(--accent); color: #000; border-color: var(--accent); }
-
-    /* Food List */
-    .food-item { background: var(--bg); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-    .food-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .food-name { font-size: 15px; font-weight: 600; }
-    .food-meta { font-size: 12px; color: var(--muted); }
-    .portion-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-    .btn-portion { flex: 1; min-width: 60px; background: var(--card-light); color: var(--text); border: none; padding: 8px 6px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; active: scale(0.97); }
-    .btn-portion:active { background: var(--accent); color: #000; }
-
-    /* Forms */
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-    .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .form-row-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    input, select { width: 100%; background: var(--bg); border: 1px solid var(--card-light); color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px; }
-    input:focus { outline: none; border-color: var(--accent); }
-
-    .btn-main { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
-    .btn-secondary { width: 100%; background: var(--card-light); color: var(--text); border: none; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
-    .btn-danger { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid var(--danger); padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-
-    /* Log List */
-    .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--card-light); }
-    .log-item:last-child { border-bottom: none; }
-    .log-info h4 { font-size: 14px; font-weight: 600; }
-    .log-info p { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .btn-del { background: none; border: none; color: var(--danger); font-size: 18px; padding: 4px 8px; cursor: pointer; }
-
-    /* Bottom Navigation */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; background: var(--card); border-top: 1px solid var(--card-light); display: flex; justify-content: space-around; padding: 10px 0; z-index: 20; }
-    .nav-btn { background: none; border: none; color: var(--muted); font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
-    .nav-btn.active { color: var(--accent); }
-    .nav-icon { font-size: 20px; }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .bomb-card { border-left: 4px solid var(--fat); background: var(--bg); padding: 12px; border-radius: 12px; margin-bottom: 12px; }
-    .bomb-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; color: #fde68a; }
-    .bomb-desc { font-size: 13px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
-    .bomb-macros { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мой день — дневник питания и тела</title>
+<meta name="theme-color" content="#12202b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<header class="top">
+  <h1>Мой день</h1>
+  <div class="datenav">
+    <button id="prev" aria-label="Предыдущий день">‹</button>
+    <input type="date" id="date" aria-label="Дата">
+    <button id="next" aria-label="Следующий день">›</button>
+    <button id="today" class="ghost">Сегодня</button>
+  </div>
+  <button id="theme" class="ghost" aria-label="Сменить тему">◐</button>
+</header>
 
-  <header>
-    <h1>⚡ MassGain 193</h1>
-    <span id="weightBadge">65 кг ➔ 75 кг</span>
-  </header>
+<nav class="tabs" role="tablist">
+  <button data-tab="day" class="on">День</button>
+  <button data-tab="me">Расчёты</button>
+  <button data-tab="hist">История</button>
+</nav>
 
-  <div class="container">
-    <!-- Сводка калорий (видна всегда) -->
-    <div class="card">
-      <div class="kcal-main">
-        <div class="kcal-numbers">
-          <span id="curKcal">0</span> <small>/ <span id="goalKcal">3150</span> ккал</small>
-        </div>
-        <div style="font-size: 12px; color: var(--muted); margin-top: 2px;" id="remainText">Осталось набрать: 3150 ккал</div>
-        <div class="progress-bar"><div class="progress-fill" id="kcalBar"></div></div>
-      </div>
-
-      <div class="macros-grid">
-        <div class="macro-box">
-          <div class="macro-label">Белки</div>
-          <div class="macro-val"><span id="curP">0</span> / <span id="goalP">135</span>г</div>
-          <div class="mini-bar"><div class="mini-fill" id="pBar" style="background: var(--protein);"></div></div>
-        </div>
-        <div class="macro-box">
-          <div class="macro-label">Жиры</div>
-          <div class="macro-val"><span id="curF">0</span> / <span id="goalF">105</span>г</div>
-          <div class="mini-bar"><div class="mini-fill" id="fBar" style="background: var(--fat);"></div></div>
-        </div>
-        <div class="macro-box">
-          <div class="macro-label">Углеводы</div>
-          <div class="macro-val"><span id="curC">0</span> / <span id="goalC">415</span>г</div>
-          <div class="mini-bar"><div class="mini-fill" id="cBar" style="background: var(--carbs);"></div></div>
-        </div>
-      </div>
+<main>
+<!-- ДЕНЬ -->
+<section id="tab-day" class="tab on">
+  <div class="hero card">
+    <div class="rw">
+    <svg viewBox="0 0 130 130" class="ring" aria-hidden="true">
+      <circle cx="65" cy="65" r="54" class="ring-bg"/>
+      <circle cx="65" cy="65" r="54" class="ring-fg" id="ringFg"/>
+    </svg>
+    <div class="ring-text">
+      <b id="left">0</b>
+      <span id="leftLbl">осталось ккал</span>
     </div>
-
-    <!-- Вкладка 1: Дневник и быстрый выбор -->
-    <div id="tab-diary" class="tab-content active">
-      <div class="card">
-        <div class="card-title">
-          <span>Быстрое добавление (без весов)</span>
-        </div>
-        <div id="quickFoodList"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <span>Съедено за сегодня</span>
-          <button class="btn-danger" onclick="clearToday()">Сбросить день</button>
-        </div>
-        <div id="todayLog"></div>
-      </div>
     </div>
-
-    <!-- Вкладка 2: Калькулятор с пачки -->
-    <div id="tab-pack" class="tab-content">
-      <div class="card">
-        <div class="card-title">📦 Расчёт по пачке (с этикетки)</div>
-        <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">
-          Посмотри на обратную сторону упаковки, введи данные на 100 г и общий вес пачки. Весы не нужны!
-        </p>
-
-        <div class="form-group">
-          <label>Название продукта</label>
-          <input type="text" id="packName" placeholder="Например: Пельмени / Творог / Булочка">
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Вес ВСЕЙ пачки (г)</label>
-            <input type="number" id="packWeight" value="400" oninput="calcPackPreview()">
-          </div>
-          <div class="form-group">
-            <label>Какую часть съел?</label>
-            <select id="packFraction" onchange="calcPackPreview()">
-              <option value="1">Всю пачку (100%)</option>
-              <option value="0.75">3/4 пачки (75%)</option>
-              <option value="0.5" selected>Половину пачки (1/2)</option>
-              <option value="0.333">Треть пачки (1/3)</option>
-              <option value="0.25">Четверть пачки (1/4)</option>
-              <option value="0.2">Пятую часть (1/5)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Данные с этикетки НА 100 ГРАММ:</label>
-          <div class="form-row-4">
-            <div>
-              <label>Ккал</label>
-              <input type="number" id="packKcal100" placeholder="Ккал" oninput="calcPackPreview()">
-            </div>
-            <div>
-              <label>Белки</label>
-              <input type="number" id="packP100" placeholder="Б" oninput="calcPackPreview()">
-            </div>
-            <div>
-              <label>Жиры</label>
-              <input type="number" id="packF100" placeholder="Ж" oninput="calcPackPreview()">
-            </div>
-            <div>
-              <label>Углеводы</label>
-              <input type="number" id="packC100" placeholder="У" oninput="calcPackPreview()">
-            </div>
-          </div>
-        </div>
-
-        <div style="background: var(--bg); padding: 12px; border-radius: 10px; margin: 12px 0; text-align: center;">
-          <div style="font-size: 12px; color: var(--muted);">Итого в твоей порции (<span id="previewGrams">200</span> г):</div>
-          <div style="font-size: 18px; font-weight: 800; color: var(--accent); margin-top: 4px;" id="previewMacros">0 ккал | Б: 0г | Ж: 0г | У: 0г</div>
-        </div>
-
-        <button class="btn-main" onclick="addFromPack(false)">+ Добавить в дневник</button>
-        <button class="btn-secondary" onclick="addFromPack(true)">⭐ Добавить и сохранить пачку в базу</button>
-      </div>
+    <div class="hero-side">
+      <p><b id="eaten">0</b> съедено из <b id="goal">0</b></p>
+      <div class="macro" id="mP"><i></i><span></span></div>
+      <div class="macro" id="mF"><i></i><span></span></div>
+      <div class="macro" id="mC"><i></i><span></span></div>
+      <p class="muted" id="streak"></p>
     </div>
-
-    <!-- Вкладка 3: Калорийные бомбы -->
-    <div id="tab-bombs" class="tab-content">
-      <div class="card">
-        <div class="card-title">💣 Калорийные бомбы (для тех, кто ест 2 раза)</div>
-        <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px;">
-          Пить калории в 3 раза легче, чем жевать! Открывай свой протеин — эти коктейли делаются за 2 минуты без весов и дают до 1000 ккал за раз.
-        </p>
-        <div id="bombsList"></div>
-      </div>
-    </div>
-
-    <!-- Вкладка 4: Профиль и цели -->
-    <div id="tab-profile" class="tab-content">
-      <div class="card">
-        <div class="card-title">⚙️ Твои параметры (Рост 193 см)</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Текущий вес (кг)</label>
-            <input type="number" id="userWeight" value="65" step="0.5">
-          </div>
-          <div class="form-group">
-            <label>Цель по калориям</label>
-            <input type="number" id="userGoalKcal" value="3150">
-          </div>
-        </div>
-        <button class="btn-main" onclick="saveProfile()">Сохранить настройки</button>
-      </div>
-
-      <div class="card">
-        <div class="card-title">💡 Шпаргалка эктоморфа</div>
-        <ul style="font-size: 13px; color: var(--muted); padding-left: 18px; line-height: 1.6;">
-          <li><b>Не жди зала, чтобы пить протеин:</b> Пей коктейль между завтраком и ужином прямо сейчас.</li>
-          <li><b>Спагетти + Масло + Сыр:</b> В тарелку готовых спагетти всегда наливай 2 ст. ложки растительного или сливочного масла (+240 ккал вообще без объёма).</li>
-          <li><b>Фарш выгоднее грудки:</b> В куриной грудке мало калорий (она для худеющих). Чередуй её с говяжьим/свиным фаршем — в нём в 2 раза больше энергии!</li>
-          <li><b>Тренировки дома:</b> Делай хотя бы 3 подхода отжиманий и приседаний через день — это разбудит зверский аппетит.</li>
-        </ul>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Нижнее меню -->
-  <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="switchTab('diary', this)">
-      <span class="nav-icon">🍽️</span>
-      <span>Рацион</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('pack', this)">
-      <span class="nav-icon">📦</span>
-      <span>С пачки</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('bombs', this)">
-      <span class="nav-icon">💣</span>
-      <span>Бомбы</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('profile', this)">
-      <span class="nav-icon">⚙️</span>
-      <span>Профиль</span>
-    </button>
-  </nav>
+  <div class="card">
+    <h2>Вода</h2>
+    <div class="bar"><i id="waterBar"></i></div>
+    <p class="muted"><b id="waterNow">0</b> из <span id="waterGoal">0</span> мл</p>
+    <div class="row">
+      <button data-w="150">+150</button><button data-w="250">+250</button><button data-w="500">+500</button><button data-w="-250" class="ghost">−250</button>
+    </div>
+  </div>
 
-  <script>
-    // База твоих продуктов без весов (расчет на всю пачку или штуку)
-    const defaultFoods = [
-      {
-        id: 'spaghetti',
-        name: '🍝 Спагетти (пачка 450г сухих)',
-        desc: '1600 ккал во всей пачке',
-        kcal: 1600, p: 54, f: 7, c: 324,
-        buttons: [
-          { label: '1/4 пачки', mult: 0.25 },
-          { label: '1/3 пачки', mult: 0.333 },
-          { label: '1/2 пачки', mult: 0.5 }
-        ]
-      },
-      {
-        id: 'minced_meat',
-        name: '🥩 Фарш домашний (лоток 400г)',
-        desc: '1000 ккал в лотке (свинина/говядина)',
-        kcal: 1000, p: 68, f: 80, c: 0,
-        buttons: [
-          { label: '1/3 лотка', mult: 0.333 },
-          { label: '1/2 лотка', mult: 0.5 },
-          { label: 'Весь (400г)', mult: 1 }
-        ]
-      },
-      {
-        id: 'chicken_fillet',
-        name: '🍗 Куриное филе (упаковка 500г)',
-        desc: '565 ккал и 115г белка в пачке',
-        kcal: 565, p: 115, f: 10, c: 0,
-        buttons: [
-          { label: '1/3 пачки', mult: 0.333 },
-          { label: '1/2 пачки', mult: 0.5 },
-          { label: 'Вся (500г)', mult: 1 }
-        ]
-      },
-      {
-        id: 'peanut_butter',
-        name: '🥜 Арахисовая паста (с горкой)',
-        desc: '1 ст. ложка с горкой (~30г) = 190 ккал',
-        kcal: 190, p: 8, f: 15, c: 5,
-        buttons: [
-          { label: '+ 1 ложка', mult: 1 },
-          { label: '+ 2 ложки', mult: 2 },
-          { label: '+ 3 ложки', mult: 3 }
-        ]
-      },
-      {
-        id: 'whey_protein',
-        name: '🥤 Протеин (мерный черпак ~30г)',
-        desc: '1 скуп = 120 ккал и 24г чистого белка',
-        kcal: 120, p: 24, f: 2, c: 3,
-        buttons: [
-          { label: '+ 1 скуп', mult: 1 },
-          { label: '+ 1.5 скупа', mult: 1.5 },
-          { label: '+ 2 скупа', mult: 2 }
-        ]
-      },
-      {
-        id: 'eggs',
-        name: '🥚 Яйца куриные (штуки)',
-        desc: '1 крупное яйцо = 80 ккал',
-        kcal: 80, p: 6.5, f: 5.5, c: 0.5,
-        buttons: [
-          { label: '+ 2 яйца', mult: 2 },
-          { label: '+ 3 яйца', mult: 3 },
-          { label: '+ 4 яйца', mult: 4 }
-        ]
-      },
-      {
-        id: 'milk',
-        name: '🥛 Молоко 3.2% (кружка 300 мл)',
-        desc: '1 кружка = 180 ккал',
-        kcal: 180, p: 9, f: 9.6, c: 14,
-        buttons: [
-          { label: '+ 1 кружка', mult: 1 },
-          { label: '+ 2 кружки', mult: 2 },
-          { label: 'Пакет 1л', mult: 3.33 }
-        ]
-      },
-      {
-        id: 'oil_butter',
-        name: '🧈 Масло в гарнир / при жарке',
-        desc: '1 ст. ложка масла = 120 ккал (чит-код!)',
-        kcal: 120, p: 0, f: 13.5, c: 0,
-        buttons: [
-          { label: '+ 1 ложка', mult: 1 },
-          { label: '+ 2 ложки', mult: 2 }
-        ]
-      },
-      {
-        id: 'bread_banana',
-        name: '🍌 Банан или 2 куска хлеба',
-        desc: 'Быстрые углеводы = 130 ккал',
-        kcal: 130, p: 3, f: 1, c: 28,
-        buttons: [
-          { label: '+ 1 порция', mult: 1 },
-          { label: '+ 2 порции', mult: 2 }
-        ]
-      }
-    ];
+  <div class="card">
+    <h2>Еда</h2>
+    <div id="recent" class="chips"></div>
+    <form id="foodForm" class="grid">
+      <label class="wide">Название<input id="fName" required maxlength="60" placeholder="Например, гречка с курицей" autocomplete="off"></label>
+      <label>Приём
+        <select id="fMeal"><option>Завтрак</option><option>Обед</option><option>Ужин</option><option>Перекус</option></select>
+      </label>
+      <label>Значения указаны
+        <select id="fMode"><option value="total">на всю порцию</option><option value="100">на 100 г</option></select>
+      </label>
+      <label id="gWrap" hidden>Порция, г<input id="fG" type="number" min="1" step="1" inputmode="decimal"></label>
+      <label>Ккал<input id="fK" type="number" min="0" step="any" inputmode="decimal" required></label>
+      <label>Белки, г<input id="fP" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>Жиры, г<input id="fF" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>Углеводы, г<input id="fC" type="number" min="0" step="any" inputmode="decimal"></label>
+      <p class="muted wide" id="preview"></p>
+      <button class="primary wide" type="submit">Добавить в день</button>
+    </form>
+    <ul id="foodList" class="list"></ul>
+  </div>
 
-    const calorieBombs = [
-      {
-        name: '🥤 Шейк «Мега-Масса» (Твой протеин + Паста)',
-        desc: 'Смешай в блендере или шейкере: 400 мл молока + 1.5 скупа твоего протеина + 2 ложки арахисовой пасты + 1 банан (можно съесть вприкуску). Выпивается за 1 минуту!',
-        kcal: 930, p: 62, f: 45, c: 68
-      },
-      {
-        name: '🍝 Мега-Ужин: Спагетти Болоньезе',
-        desc: '1/3 пачки спагетти + половина лотка фарша (200г) + 1.5 ложки масла + кетчуп/сыр. Закрывает почти половину дневной нормы!',
-        kcal: 1210, p: 52, f: 56, c: 120
-      },
-      {
-        name: '🥪 Быстрый перекус: Сэндвич Эктоморфа',
-        desc: '3 тоста/куска батона + 2 щедрые ложки арахисовой пасты + 1 банан кружочками сверху + кружка молока.',
-        kcal: 860, p: 29, f: 42, c: 92
-      },
-      {
-        name: '🍳 Завтрак Чемпиона без каши',
-        desc: 'Яичница из 4 яиц на масле + 2 куска хлеба + чашка чая/молока с 1 ложкой арахисовой пасты.',
-        kcal: 820, p: 40, f: 50, c: 35
-      }
-    ];
+  <div class="card">
+    <h2>Показатели дня</h2>
+    <div class="grid">
+      <label>Вес, кг<input id="mW" type="number" step="0.1" min="20" max="400" inputmode="decimal"></label>
+      <label>Сон, ч<input id="mSleep" type="number" step="0.25" min="0" max="24" inputmode="decimal"></label>
+      <label>Шаги<input id="mSteps" type="number" step="100" min="0" inputmode="numeric"></label>
+      <label>Тренировка, мин<input id="mWork" type="number" step="5" min="0" inputmode="numeric"></label>
+      <label class="wide">Самочувствие
+        <div class="mood" id="mood"><button data-m="1">😞</button><button data-m="2">😕</button><button data-m="3">😐</button><button data-m="4">🙂</button><button data-m="5">😄</button></div>
+      </label>
+      <label class="wide">Заметка<textarea id="mNote" rows="3" maxlength="600" placeholder="Что было за день?"></textarea></label>
+    </div>
+  </div>
+</section>
 
-    let state = {
-      weight: 65,
-      goalKcal: 3150,
-      goalP: 135,
-      goalF: 105,
-      goalC: 415,
-      customFoods: [],
-      log: []
-    };
+<!-- РАСЧЁТЫ -->
+<section id="tab-me" class="tab">
+  <div class="card">
+    <h2>Мои данные</h2>
+    <div class="grid" id="pForm">
+      <label>Пол<select id="pSex"><option value="m">Мужской</option><option value="f">Женский</option></select></label>
+      <label>Возраст<input id="pAge" type="number" min="10" max="100" inputmode="numeric"></label>
+      <label>Рост, см<input id="pH" type="number" min="100" max="250" inputmode="decimal"></label>
+      <label>Вес, кг<input id="pW" type="number" min="30" max="300" step="0.1" inputmode="decimal"></label>
+      <label class="wide">Активность
+        <select id="pAct">
+          <option value="1.2">Сидячая: почти нет движения</option>
+          <option value="1.375">Лёгкая: 1–3 тренировки в неделю</option>
+          <option value="1.55">Средняя: 3–5 тренировок</option>
+          <option value="1.725">Высокая: 6–7 тренировок</option>
+          <option value="1.9">Очень высокая: физический труд + спорт</option>
+        </select>
+      </label>
+      <label>Цель<select id="pGoal"><option value="lose">Похудеть</option><option value="keep">Держать вес</option><option value="gain">Набрать</option></select></label>
+      <label>Темп, кг в неделю<select id="pRate"><option>0.25</option><option>0.5</option><option>0.75</option></select></label>
+    </div>
+    <p class="muted">Если вы вносите вес в дневнике, расчёты используют последний внесённый.</p>
+  </div>
 
-    function loadState() {
-      const saved = localStorage.getItem('massGain193_v1');
-      if (saved) {
-        state = { ...state, ...JSON.parse(saved) };
-      }
-      document.getElementById('userWeight').value = state.weight;
-      document.getElementById('userGoalKcal').value = state.goalKcal;
-      document.getElementById('weightBadge').innerText = `${state.weight} кг ➔ 75 кг`;
-      renderAll();
-    }
+  <div class="card">
+    <h2>Результаты</h2>
+    <div class="stats" id="stats"></div>
+    <p class="muted" id="advice"></p>
+  </div>
 
-    function saveState() {
-      localStorage.setItem('massGain193_v1', JSON.stringify(state));
-      renderAll();
-    }
+  <div class="card">
+    <h2>Калькулятор продукта</h2>
+    <div class="grid">
+      <label>Ккал на 100 г<input id="qK" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>Масса, г<input id="qG" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>Белки на 100 г<input id="qP" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>Жиры на 100 г<input id="qF" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>Углеводы на 100 г<input id="qC" type="number" min="0" step="any" inputmode="decimal"></label>
+      <p class="muted wide" id="qOut">Введите значения — результат появится здесь.</p>
+    </div>
+  </div>
+</section>
 
-    function renderAll() {
-      renderSummary();
-      renderQuickFoods();
-      renderLog();
-      renderBombs();
-      calcPackPreview();
-    }
+<!-- ИСТОРИЯ -->
+<section id="tab-hist" class="tab">
+  <div class="card">
+    <div class="row between">
+      <select id="hMetric" aria-label="Показатель">
+        <option value="kcal">Калории</option><option value="weight">Вес</option><option value="water">Вода</option><option value="sleep">Сон</option><option value="steps">Шаги</option>
+      </select>
+      <select id="hRange" aria-label="Период"><option value="14">14 дней</option><option value="30" selected>30 дней</option><option value="90">90 дней</option></select>
+    </div>
+    <canvas id="chart" height="220"></canvas>
+    <p class="muted" id="hSum"></p>
+  </div>
+  <div class="card">
+    <h2>Дни</h2>
+    <ul id="dayList" class="list"></ul>
+  </div>
+  <div class="card">
+    <h2>Данные</h2>
+    <p class="muted">Всё хранится только в этом браузере. Сохраняйте копию, чтобы перенести данные на другое устройство.</p>
+    <div class="row">
+      <button id="exp">Сохранить копию</button>
+      <button id="imp" class="ghost">Загрузить копию</button>
+      <button id="wipe" class="danger">Стереть всё</button>
+      <input type="file" id="file" accept="application/json" hidden>
+    </div>
+  </div>
+</section>
+</main>
 
-    function renderSummary() {
-      let totKcal = 0, totP = 0, totF = 0, totC = 0;
-      state.log.forEach(item => {
-        totKcal += item.kcal;
-        totP += item.p;
-        totF += item.f;
-        totC += item.c;
-      });
-
-      totKcal = Math.round(totKcal);
-      totP = Math.round(totP);
-      totF = Math.round(totF);
-      totC = Math.round(totC);
-
-      document.getElementById('curKcal').innerText = totKcal;
-      document.getElementById('goalKcal').innerText = state.goalKcal;
-      document.getElementById('curP').innerText = totP;
-      document.getElementById('goalP').innerText = state.goalP;
-      document.getElementById('curF').innerText = totF;
-      document.getElementById('goalF').innerText = state.goalF;
-      document.getElementById('curC').innerText = totC;
-      document.getElementById('goalC').innerText = state.goalC;
-
-      const rem = state.goalKcal - totKcal;
-      const remEl = document.getElementById('remainText');
-      if (rem > 0) {
-        remEl.innerText = `Осталось набрать: ${rem} ккал`;
-        remEl.style.color = 'var(--muted
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>
