@@ -29,7 +29,8 @@ function calc() {
   const delta = (p.goal === 'lose' ? -1 : p.goal === 'gain' ? 1 : 0) * p.rate * 1100; // 7700 ккал ≈ 1 кг
   const floor = p.sex === 'm' ? 1500 : 1200;
   const kcal = Math.max(floor, Math.round(tdee + delta));
-  const prot = Math.round(w * (p.goal === 'lose' ? 2 : 1.6)), fat = Math.round(w * 0.9);
+  const prot = Math.round(w * (p.goal === 'lose' ? 2 : 1.8));
+  const fat = Math.round(Math.max(w * 0.9, kcal * 0.27 / 9)); // не меньше 0,9 г/кг и ~27% калорий
   const carb = Math.max(0, Math.round((kcal - prot * 4 - fat * 9) / 4));
   return { w, bmr, tdee, kcal, prot, fat, carb, bmi: w / (m * m), lo: 18.5 * m * m, hi: 24.9 * m * m,
     water: Math.round(w * 33 / 50) * 50, floored: tdee + delta < floor };
@@ -247,4 +248,3 @@ $('#theme').onclick = () => { S.theme = document.documentElement.dataset.theme =
 function renderAll() { theme(); renderDay(); renderMe(); renderQ(); updPreview(); }
 fillProfile(); renderAll();
 if (['me', 'hist'].includes(location.hash.slice(1))) tab(location.hash.slice(1));
-  
